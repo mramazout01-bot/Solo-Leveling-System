@@ -6,6 +6,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -o PlayerSystemStrictAndroidProject.zip
+      - name: Fix Java version
+        run: |
+          cat >> app/build.gradle.kts <<'EOF'
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+          kotlin {
+              compilerOptions {
+                  jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+              }
+          }
+          EOF
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
