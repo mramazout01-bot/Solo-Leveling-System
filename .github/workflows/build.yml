@@ -6,26 +6,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -o PlayerSystemStrictAndroidProject.zip
-      - name: Fix Java version
-        run: |
-          cat >> app/build.gradle.kts <<'EOF'
-          android {
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-          }
-          kotlin {
-              compilerOptions {
-                  jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-              }
-          }
-          EOF
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 8.9 }
-      - run: gradle assembleDebug
+      - name: Build
+        run: |
+          set +e
+          gradle assembleDebug --console=plain > build.log 2>&1
+          code=$?
+          grep -E "^e: " build.log | sed -E 's#file:///home/runner/work/[^/]+/[^/]+/##' | while read -r l; do echo "::error::$l"; done
+          grep -A8 "What went wrong" build.log | while read -r l; do echo "::error::$l"; done
+          exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug
